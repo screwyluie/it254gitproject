@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Generate seven random lines of data
+for ((i=0; i<7; i++)); do
+  echo "Random data $i" >> data.txt
+done
+
+# Delete five random lines of data
+for ((i=0; i<5; i++)); do
+  line_num=$(shuf -i 1-7 -n 1)  # Generate a random line number
+  sed -i "${line_num}d" data.txt  # Delete the line
+done
+
+# Remove the data.txt file forcefully
+rm -rf data.txt
