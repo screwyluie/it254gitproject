@@ -1,0 +1,76 @@
+import system
+import time
+
+# Define the list of triggering components
+triggerComponentPaths = [
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:20"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:21"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:22"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:23"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:24"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:25"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:26"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:27"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:28"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:32"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:31"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:34"},
+    {"path": "[Ignition]ferndale/gvbed1/n202/n202:33"}
+    
+    #SYNTAX {"path": "[default]Folder/TriggerComponent"}, 
+]
+
+# Define the list of components to monitor with corresponding column headers
+componentPaths = [
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:60", "header": "D1 inlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:65", "header": "D1 outlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:70", "header": "D2 inlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:75", "header": "D2 outlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:80", "header": "D3 inlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:85", "header": "D3 outlet temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:115", "header": "Burn Chamber temp"},
+    {"path": "[Ignition]ferndale/gvbed1/f53/f53:120", "header": "Plenum temp"},
+    {"path": "[Ignition]ferndale/gvbed1/pd90/f554/f554:14", "header": "TCV-101 D1 Damper pos"},
+    {"path": "[~]ferndale/gvbed1/n:108/tcv102", "header": "TCV-102 D2 Damper pos"},
+    {"path": "[Ignition]ferndale/gvbed1/pd90/f554/f554:16", "header": "TCV-103 D3 Damper pos"},
+    {"path": "[~]ferndale/gvbed4/b10_damper_scaled_pos_ing", "header": "B10 Damper pos"},
+    {"path": "[~]ferndale/gvbed3/aco_d4_dry_scaled", "header": "ACO moisture %"},
+    {"path": "[~]ferndale/gvbed1/n110/tcv104", "header": "TCV-104 D3 Cold Damper pos"},
+    {"path": "[~]ferndale/gvbed4/tcv107", "header": "TCV-107 D1 Cold Damper pos"},
+    {"path": "[~]ferndale/gvbed4/tcv108", "header": "TCV-108 D2 Cold Damper pos"},
+    {"path": "[Ignition]ferndale/gvbed1/f50/f50:", "header": "Lbs per hour"},
+    {"path": "[~]ferndale/gvbed4/te_tank_farm", "header": "Outside Temp"}
+   #SYNTAX {"path": "[default]Folder/Component", "header": "Component_State"},
+]
+
+# Define the path of the CSV file to store the state information
+csvFileDirectory = "C:/Ignition Process Fire Report"
+
+# Define the duration in seconds to capture before the trigger component transitions to an off state
+captureDuration = 5
+
+# Get the current timestamp
+currentTimestamp = system.date.now()
+
+# Calculate the timestamp 5 seconds before the current time
+captureStartTimestamp = system.date.addSeconds(currentTimestamp, -captureDuration)
+
+# Check if any triggering component is in an ON state
+triggered = any(system.tag.read(trigger["path"]).value for trigger in triggerComponentPaths)
+
+    ##### Write column headers
+    columnHeaders = ["Timestamp"]
+    for component in componentPaths:
+        columnHeaders.append(component["header"])
+    file.write("{}\n".format(",".join(columnHeaders)))
+
+    # Capture component states
+    states = [system.tag.readBlocking([component["path"]], [captureStartTimestamp])[0].value for component in componentPaths]
+
+    # Write captured states to CSV file
+    row = [captureStartTimestamp]
+    row.extend(states)
+    file.write("{}\n".format(",".join(map(str, row))))
+
+    # Close the CSV file
+    file.close()
